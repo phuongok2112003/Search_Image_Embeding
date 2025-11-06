@@ -1,58 +1,45 @@
-import os
-import torch
-from PIL import Image
-from tqdm import tqdm
-from transformers import CLIPProcessor, CLIPModel
-import numpy as np
+# import base64
+# import asyncio
+# from langchain_ollama import ChatOllama
+# from langchain_core.messages import HumanMessage
 
-# 1. Load model CLIP
-model_name = "openai/clip-vit-base-patch32"
-model = CLIPModel.from_pretrained(model_name)
-processor = CLIPProcessor.from_pretrained(model_name)
+# async def main():
+#     # 1️⃣ Khởi tạo model
+#     llm = ChatOllama(
+#         model="qwen3-vl",
+#         base_url="http://10.0.13.13:11434",  # Địa chỉ Ollama server
+#         temperature=0,
+#     )
 
-# 2. Hàm encode ảnh
-def get_image_embedding(image_path):
-    image = Image.open(image_path).convert("RGB")
-    inputs = processor(images=image, return_tensors="pt")
-    with torch.no_grad():
-        emb = model.get_image_features(**inputs)
-        emb = emb / emb.norm(p=2)
-    return emb.cpu().numpy().flatten()
+#     # 2️⃣ Đọc ảnh & mã hóa base64
+#     image_path = "Media (1).jpg"
+#     with open(image_path, "rb") as f:
+#         image_base64 = base64.b64encode(f.read()).decode()
 
-# 3. Hàm encode văn bản
-def get_text_embedding(text):
-    inputs = processor(text=[text], return_tensors="pt", padding=True)
-    with torch.no_grad():
-        emb = model.get_text_features(**inputs)
-        emb = emb / emb.norm(p=2)
-    return emb.cpu().numpy().flatten()
+#     # 3️⃣ Tạo message đúng chuẩn cho Ollama
+#     message = HumanMessage(content=[
+#         {"type": "text", "text": "Mô tả chi tiết nội dung của bức ảnh này."},
+#         {"type": "image_url", "image_url": image_base64}  # ❗ KHÔNG có prefix
+#     ])
 
-# 4. Tạo dataset ảnh
-dataset_dir = "images"
-image_paths = [os.path.join(dataset_dir, f) for f in os.listdir(dataset_dir) if f.endswith((".jpg", ".png"))]
+#     # 4️⃣ Gọi model async
+#     response = await llm.ainvoke([message])
 
-gallery_embs = []
-for path in tqdm(image_paths, desc="Encoding gallery"):
-    gallery_embs.append(get_image_embedding(path))
-gallery_embs = np.vstack(gallery_embs)
+#     # 5️⃣ In kết quả
+#     print(response.content)
 
-while True:
-    # 5. Query có thể là text hoặc ảnh
-    query = input("Nhập mô tả hoặc đường dẫn ảnh: ").strip()
-    if query=='q':
-        break
-    if os.path.exists(query):  # nếu là đường dẫn file ảnh
-        print(f"Tìm ảnh giống: {query}")
-        query_emb = get_image_embedding(query)
-    else:  # nếu là văn bản
-        print(f"Tìm ảnh phù hợp với mô tả: '{query}'")
-        query_emb = get_text_embedding(query)
+# # 6️⃣ Chạy async main
+# if __name__ == "__main__":
+#     asyncio.run(main())
 
-    # 6. Tính cosine similarity
-    similarities = np.dot(gallery_embs, query_emb)
-    topk_idx = np.argsort(similarities)[::-1][:5]
 
-    # 7. In kết quả
-    print("\nẢnh phù hợp nhất:")
-    for i in topk_idx:
-        print(f"{image_paths[i]} - similarity: {similarities[i]:.4f}")
+import requests
+headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                  "AppleWebKit/537.36 (KHTML, like Gecko) "
+                  "Chrome/120.0.0.0 Safari/537.36"
+}
+
+url = "https://g8home.vn/hinh-san-pham/medium/DEN-AM-TRAN-DE-MONG-12W-ANH-SANG-DOI-MAU-26517.jpg"
+r = requests.get(url, headers=headers, timeout=10)
+print(r.status_code)

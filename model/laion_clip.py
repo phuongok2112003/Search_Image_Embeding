@@ -4,6 +4,7 @@ import numpy as np
 from PIL import Image
 from .base_models import BaseModelEmbedder
 
+
 class LaionClipModel(BaseModelEmbedder):
     def __init__(self, model_name="ViT-B-32", pretrained="laion2b_s34b_b79k", **kwargs):
         super().__init__(**kwargs)

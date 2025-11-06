@@ -4,6 +4,7 @@ import numpy as np
 from PIL import Image
 from .base_models import BaseModelEmbedder
 
+
 class OpenAIClipModel(BaseModelEmbedder):
     def load_model(self):
         model_name = "openai/clip-vit-base-patch32"
@@ -27,7 +28,9 @@ class OpenAIClipModel(BaseModelEmbedder):
         return emb.cpu().numpy().flatten()
 
     def get_text_embedding(self, text: str):
-        inputs = self.processor(text=[text], return_tensors="pt", padding=True).to(self.device)
+        inputs = self.processor(text=[text], return_tensors="pt", padding=True).to(
+            self.device
+        )
         with torch.no_grad():
             emb = self.model.get_text_features(**inputs)
             emb = emb / emb.norm(p=2, dim=-1, keepdim=True)
