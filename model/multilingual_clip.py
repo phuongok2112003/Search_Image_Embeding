@@ -48,8 +48,8 @@ class MultilingualClipModel(BaseModelEmbedder):
                 image = Image.open(image_input).convert("RGB")
             else:
                 image = image_input.convert("RGB")
-            emb = self.img_model.encode([image], convert_to_numpy=True)
-            return emb
+            emb = self.img_model.encode([image], convert_to_numpy=True, normalize_embeddings=True)  # numpy array (1, 512)
+            return emb.flatten()  # thành vector (512,)
         except Exception as ex:
             print(f"❌ Lỗi khi encode ảnh: {ex}")
             return None
@@ -57,16 +57,19 @@ class MultilingualClipModel(BaseModelEmbedder):
     def get_text_embedding(self, text: str):
         """Encode 1 câu mô tả"""
         try:
-            emb = self.text_model.encode([text], convert_to_numpy=True)
-            return emb
+            emb = self.text_model.encode([text], convert_to_numpy=True, normalize_embeddings=True)
+            return emb.flatten()  # thành vector (512,)
         except Exception as ex:
             print(f"❌ Lỗi khi encode text: {ex}")
             return None
 
     def search(self, query_emb, top_k=5):
+        print("chay vao day ne")
         if query_emb is None:
             return []
         print("model ",self.model_name)
+        print("shape query", query_emb.shape)
+        print("shap galler_embeding", self.gallery_embs.shape)
         cos_sim = util.cos_sim(query_emb, self.gallery_embs)  # shape (1, N)
         cos_sim = cos_sim.squeeze(0).numpy()                            # shape (N,)
 

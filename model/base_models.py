@@ -42,6 +42,8 @@ class BaseModelEmbedder(ABC):
 
     def search(self, query_emb, top_k=5):
         """Tính cosine similarity và trả về top ảnh"""
+        self.gallery_embs = self.gallery_embs / np.linalg.norm(self.gallery_embs, axis=1, keepdims=True)
+
         sims = np.dot(self.gallery_embs, query_emb)
         topk_idx = np.argsort(sims)[::-1][:top_k]
         results = [{"path": self.gallery_paths[i], "similarity": float(sims[i])} for i in topk_idx]
